@@ -21,7 +21,7 @@ spec:
             - containerPort: 9091
           env:
             - name: ONCALL_API_URL
-              value: "http://oncall.default.svc.cluster.local"
+              value: "http://oncall.default.svc.cluster.local:8080"
             - name: ONCALL_SCRAPE_INTERVAL
               value: "15"
             - name: ONCALL_PROBER_PROMETHEUS_PORT
