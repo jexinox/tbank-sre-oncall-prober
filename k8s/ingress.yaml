@@ -9,7 +9,7 @@ spec:
     - host: oncall.local.prober
       http:
         paths:
-          - path: /metrics
+          - path: "/metrics"
             pathType: Exact
             backend:
               service:
