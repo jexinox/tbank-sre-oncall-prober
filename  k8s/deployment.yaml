@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oncall-prober
+  labels:
+    app: oncall-prober
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oncall-prober
+  template:
+    metadata:
+      labels:
+        app: oncall-prober
+    spec:
+      containers:
+        - name: oncall-prober
+          image: oncall-prober
+          ports:
+            - containerPort: 9091
+          env:
+            - name: ONCALL_API_URL
+              value: "http://oncall.local"
+            - name: ONCALL_SCRAPE_INTERVAL
+              value: "15"
+            - name: ONCALL_PROBER_PROMETHEUS_PORT
+              value: "9091"
