@@ -50,7 +50,7 @@ class Metrics:
         self.__create_user_fail.inc()
 
     def set_create_user_time(self, duration: float) -> None:
-        self.__create_user_time.set(seconds)
+        self.__create_user_time.set(duration)
 
 class OncallProber:
     def __init__(self, config: Config, metrics: Metrics):
@@ -70,7 +70,7 @@ class OncallProber:
         delete_request = None
         username = 'test_prober_user'
         try:
-            create_request = requests.post('%s/users' % (api_url), json={
+            create_request = requests.post('%s/users' % api_url, json={
                 "name": username
             })
         except Exception as err:
@@ -82,7 +82,7 @@ class OncallProber:
             except Exception as err:
                 logging.error(err)
 
-            if create_request and create_request.status_code == 201 and delete_request and delete_request.status_code == 200:
+            if create_request and create_request.status_code == 200 and delete_request and delete_request.status_code == 200:
                 metrics.add_create_user_success()
             else:
                 metrics.add_create_user_fail()
@@ -90,4 +90,28 @@ class OncallProber:
             duration = time.perf_counter() - start
             metrics.set_create_user_time(duration)
 
+def setup_logging():
+    logging.basicConfig(
+        stream=sys.stdout,
+        level=logging.DEBUG,
+        format="%(asctime)s %(levelname)s: %(message)s"
+    )
 
+
+def main():
+    setup_logging()
+    logging.debug("getting config")
+    config = EnvConfigProvider().get_config()
+    metrics = Metrics()
+    prober = OncallProber(config, metrics)
+    start_http_server(config.prom_port)
+
+    while True:
+        logging.debug("Run prober")
+        prober.probe()
+        logging.debug(f"Waiting {config.scrape_interval} before next probe")
+        time.sleep(config.scrape_interval)
+
+if __name__ == "__main__":
+    signal.signal(signal.SIGTERM, lambda signal_name, frame: sys.exit(0))
+    main()
