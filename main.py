@@ -33,14 +33,61 @@ class Metrics:
         self.__create_user_success = Counter(
             "oncall_prober_create_user_scenario_success", "Success attempts to create user scenario"
         )
+        self.__create_user_fail = Counter(
+            "oncall_prober_create_user_scenario_fail", "Failed attempts to create user scenario"
+        )
+        self.__create_user_time = Gauge(
+            "oncall_prober_create_user_scenario_time", "Time to run create user scenario"
+        )
 
-    def add_create_user
+    def add_create_user_total(self) -> None:
+        self.__create_user_total.inc()
+
+    def add_create_user_success(self) -> None:
+        self.__create_user_success.inc()
+
+    def add_create_user_fail(self) -> None:
+        self.__create_user_fail.inc()
+
+    def set_create_user_time(self, duration: float) -> None:
+        self.__create_user_time.set(seconds)
 
 class OncallProber:
-    def __init__(self, config: Config, prom_wrapper):
+    def __init__(self, config: Config, metrics: Metrics):
         self.__config = config
+        self.__metrics = metrics
 
+    def probe(self) -> None:
+        metrics = self.__metrics
+        api_url = self.__config.api_url
 
+        metrics.add_create_user_total()
+        logging.debug("try to run create user scenario")
 
+        start = time.perf_counter()
+
+        create_request = None
+        delete_request = None
+        username = 'test_prober_user'
+        try:
+            create_request = requests.post('%s/users' % (api_url), json={
+                "name": username
+            })
+        except Exception as err:
+            logging.error(err)
+            metrics.add_create_user_fail()
+        finally:
+            try:
+                delete_request = requests.delete('%s/users/%s' % (api_url, username))
+            except Exception as err:
+                logging.error(err)
+
+            if create_request and create_request.status_code == 201 and delete_request and delete_request.status_code == 200:
+                metrics.add_create_user_success()
+            else:
+                metrics.add_create_user_fail()
+
+            duration = time.perf_counter() - start
+            metrics.set_create_user_time(duration)
 
 
