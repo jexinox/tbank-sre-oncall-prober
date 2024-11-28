@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: oncall-prober
-          image: oncall-prober:latest
+          image: oncall-prober:local
           ports:
             - containerPort: 9091
           env:
